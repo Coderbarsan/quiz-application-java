@@ -4,6 +4,7 @@ import model.Player;
 import model.Question;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -78,7 +79,14 @@ public class Quiz {
     public void loadQuestions() throws IOException {
         questions.clear();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        // Find the questions file — searches multiple locations
+        File questionsFile = findQuestionsFile(filePath);
+
+        if (questionsFile == null) {
+            throw new IOException(filePath + " (The system cannot find the file specified)");
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(questionsFile))) {
             String line;
             int lineNumber = 0;
 
@@ -112,7 +120,48 @@ public class Quiz {
             }
         }
 
-        System.out.println("\n✅ Successfully loaded " + questions.size() + " question(s) from '" + filePath + "'.\n");
+        System.out.println("\n✅ Successfully loaded " + questions.size() + " question(s) from '" + questionsFile.getAbsolutePath() + "'.\n");
+    }
+
+    /**
+     * Searches for the questions file in multiple locations:
+     * 1. Current working directory
+     * 2. Same folder as the compiled .class file
+     * 3. Parent of the .class file folder (project root)
+     *
+     * @param fileName the name of the file to find
+     * @return the File object if found, null otherwise
+     */
+    private File findQuestionsFile(String fileName) {
+        // Location 1: Current working directory
+        File file = new File(fileName);
+        if (file.exists()) return file;
+
+        // Location 2: Same folder as the .class file (inside out/service/)
+        try {
+            String classPath = Quiz.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            // Decode spaces and special characters in path
+            classPath = java.net.URLDecoder.decode(classPath, java.nio.charset.StandardCharsets.UTF_8.name());
+            File classDir = new File(classPath);
+
+            // Location 2a: Next to the compiled classes folder
+            file = new File(classDir, fileName);
+            if (file.exists()) return file;
+
+            // Location 3: Parent directory (project root)
+            file = new File(classDir.getParentFile(), fileName);
+            if (file.exists()) return file;
+
+            // Location 4: Two levels up (in case of deeper nesting)
+            if (classDir.getParentFile() != null && classDir.getParentFile().getParentFile() != null) {
+                file = new File(classDir.getParentFile().getParentFile(), fileName);
+                if (file.exists()) return file;
+            }
+        } catch (Exception e) {
+            // Silently ignore — fall through to null
+        }
+
+        return null;
     }
 
     // ============================================================

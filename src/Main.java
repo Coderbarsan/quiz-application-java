@@ -30,75 +30,75 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Scanner scanner = new Scanner(System.in);
+        try (Scanner scanner = new Scanner(System.in)) {
 
-        // ── Welcome Banner ──
-        printBanner();
+            // ── Welcome Banner ──
+            printBanner();
 
-        // ── Get Player Name ──
-        System.out.print("   Enter your name: ");
-        String playerName = scanner.nextLine().trim();
+            // ── Get Player Name ──
+            System.out.print("   Enter your name: ");
+            String playerName = scanner.nextLine().trim();
 
-        if (playerName.isEmpty()) {
-            playerName = "Player";
-        }
+            if (playerName.isEmpty()) {
+                playerName = "Player";
+            }
 
-        // Create Player object (Derived class — inherits from User)
-        Player player = new Player(playerName);
+            // Create Player object (Derived class — inherits from User)
+            Player player = new Player(playerName);
 
-        System.out.println("\n   Welcome, " + player.getName() + "! Let's test your knowledge.\n");
+            System.out.println("\n   Welcome, " + player.getName() + "! Let's test your knowledge.\n");
 
-        // ── Quiz Loop ──
-        boolean playAgain = true;
+            // ── Quiz Loop ──
+            boolean playAgain = true;
 
-        while (playAgain) {
+            while (playAgain) {
 
-            // Create Quiz and set the player
-            Quiz quiz = new Quiz(player, "questions.txt", scanner);
+                // Create Quiz and set the player
+                Quiz quiz = new Quiz(player, "questions.txt", scanner);
 
-            try {
-                // Step 1: Load questions from file
-                quiz.loadQuestions();
+                try {
+                    // Step 1: Load questions from file
+                    quiz.loadQuestions();
 
-                if (quiz.getTotalQuestions() == 0) {
-                    System.out.println("   ⚠️  No questions found in the file. Exiting.");
+                    if (quiz.getTotalQuestions() == 0) {
+                        System.out.println("   ⚠️  No questions found in the file. Exiting.");
+                        break;
+                    }
+
+                    // Step 2: Start the quiz
+                    quiz.startQuiz();
+
+                    // Step 3: Display results
+                    quiz.displayResult();
+
+                    // Display player info (demonstrates polymorphism)
+                    System.out.println();
+                    player.displayInfo();
+
+                } catch (IOException e) {
+                    System.out.println("\n   ❌ Error reading questions file: " + e.getMessage());
+                    System.out.println("   Please ensure 'questions.txt' exists in the project directory.");
+                    System.out.println("   File format: questionText|option1|option2|option3|option4|correctAns");
                     break;
                 }
 
-                // Step 2: Start the quiz
-                quiz.startQuiz();
+                // Ask to play again
+                System.out.print("\n   ➤ Play again? (Y/N): ");
+                String choice = scanner.nextLine().trim().toUpperCase();
+                playAgain = choice.equals("Y") || choice.equals("YES");
 
-                // Step 3: Display results
-                quiz.displayResult();
-
-                // Display player info (demonstrates polymorphism)
-                System.out.println();
-                player.displayInfo();
-
-            } catch (IOException e) {
-                System.out.println("\n   ❌ Error reading questions file: " + e.getMessage());
-                System.out.println("   Please ensure 'questions.txt' exists in the project directory.");
-                System.out.println("   File format: questionText|option1|option2|option3|option4|correctAns");
-                break;
+                if (playAgain) {
+                    player.resetScore();
+                    System.out.println("\n   🔄 Restarting quiz...\n");
+                }
             }
 
-            // Ask to play again
-            System.out.print("\n   ➤ Play again? (Y/N): ");
-            String choice = scanner.nextLine().trim().toUpperCase();
-            playAgain = choice.equals("Y") || choice.equals("YES");
+            // ── Goodbye ──
+            System.out.println("\n╔══════════════════════════════════════════════════════╗");
+            System.out.println("║       👋  Thanks for playing! See you next time!     ║");
+            System.out.println("╚══════════════════════════════════════════════════════╝\n");
 
-            if (playAgain) {
-                player.resetScore();
-                System.out.println("\n   🔄 Restarting quiz...\n");
-            }
-        }
-
-        // ── Goodbye ──
-        System.out.println("\n╔══════════════════════════════════════════════════════╗");
-        System.out.println("║       👋  Thanks for playing! See you next time!     ║");
-        System.out.println("╚══════════════════════════════════════════════════════╝\n");
-
-        scanner.close();
+        } // Scanner auto-closes here
     }
 
     /**
